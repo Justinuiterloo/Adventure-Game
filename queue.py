@@ -24,8 +24,5 @@ q = Queue()
 q.enqueue(3)
 q.enqueue(1)
 
-#print(q.size())
-#print(q._data)
+
 print(q.dequeue())
-#print(q.peak())
-#q.empty()
