@@ -3,7 +3,7 @@ from adventure import Adventure
 
 app = Flask(__name__, static_folder='static')
 
-game = Adventure("data/TinyAdv.dat")
+game = Adventure("data/SmallAdv.dat")
 
 @app.route('/')
 def index():

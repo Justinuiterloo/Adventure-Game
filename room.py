@@ -1,3 +1,8 @@
+import string
+
+from item import Item
+
+
 class Room:
 
     def __init__(self, id, name, description):
@@ -12,7 +17,7 @@ class Room:
         self.inventory = {}
 
 
-    def add_inventory(self, name, item):
+    def add_inventory(self, name: string, item: Item):
         """
         Add item to room inventory.
         """
@@ -67,7 +72,7 @@ class Room:
         prints items and there description in a room
         """
         for key, value in self.inventory.items():
-            print(value.item_desciption())
+            print(value.item_description())
 
     def check_item(self, item):
         """

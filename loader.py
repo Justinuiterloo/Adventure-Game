@@ -1,91 +1,136 @@
-def load_room_graph(filename):
-    """
-    load rooms, directions and items.
-    """
-    from room import Room
-    from item import Item
+from room import Room
+from item import Item
 
-    # Two dicitonairies with items and rooms
-    items = {}
-    rooms = {}
 
-    # Read the first part of the text file with room info
+def load_room_graph(filename: str) -> Room:
+    """
+    Loads rooms, their connections, and items from a structured text file.
+    
+    The file should contain three sections:
+    1. Room information (id, name, description)
+    2. Room connections (source room, direction, destination room, optional item)
+    3. Item information (item name, description, room id)
+    
+    Parameters:
+        filename (str): The file path containing room, connection, and item information.
+
+    Returns:
+        Room: The starting room (usually the room with id 1).
+    """
+    rooms = {}  # Dictionary to store rooms by their id
+
+    # Read and process the file
+    with open(filename) as f:
+        # Step 1: Load room information
+        _load_rooms(f, rooms)
+        
+        # Step 2: Load room connections
+        _load_connections(f, rooms)
+        
+        # Step 3: Load items and assign them to the appropriate rooms
+        _load_items(f, rooms)
+
+    # Return the initial room, typically with id 1
+    return rooms[1]
+
+
+def _load_rooms(f, rooms: dict):
+    """
+    Internal function to load room data from the file.
+    Reads lines until a blank line is found.
+    """
+    while True:
+        line = f.readline().strip()
+
+        # Break at an empty line, indicating the end of room information
+        if not line:
+            break
+
+        # Split each line by tab to extract room details (id, name, description)
+        room_id, name, description = line.split("\t")
+
+        # Create a Room object and store it in the rooms dictionary
+        rooms[int(room_id)] = Room(int(room_id), name, description)
+
+
+def _load_connections(f, rooms: dict):
+    """
+    Internal function to load room connections from the file.
+    Reads lines until a blank line is found.
+    """
+    while True:
+        line = f.readline().strip()
+
+        # Break at an empty line, indicating the end of connection information
+        if not line:
+            break
+
+        # Extract the source room and its connections
+        connection_data = line.split("\t")
+        source_room_id = int(connection_data[0])
+        source_room = rooms[source_room_id]
+
+        # Iterate over connections, parsing each direction and destination
+        for i in range(1, len(connection_data), 2):
+            direction = connection_data[i]
+            destination_info = connection_data[i + 1]
+
+            if "/" in destination_info:
+                # If an item is needed for the connection
+                destination_room_id, required_item = destination_info.split("/")
+                destination_room = rooms[int(destination_room_id)]
+                source_room.add_connection(direction, destination_room, required_item)
+            else:
+                # Simple connection without an item
+                destination_room = rooms[int(destination_info)]
+                source_room.add_connection(direction, destination_room, None)
+
+
+def _load_items(f, rooms: dict):
+    """
+    Internal function to load item data from the file.
+    Reads lines until the end of the file.
+    """
+    while True:
+        line = f.readline().strip()
+
+        # Break at the end of the file
+        if not line:
+            break
+
+        # Split the line by tab to extract item details
+        item_name, item_description, room_id = line.split("\t")
+
+        # Create an Item object and add it to the specified room
+        item = Item(item_name, item_description)
+        rooms[int(room_id)].add_inventory(item_name, item)
+
+
+def load_synonyms(filename: str) -> dict:
+    """
+    Loads synonyms for command input from a structured text file.
+    
+    The file should contain lines with the format `command=synonym`.
+    
+    Parameters:
+        filename (str): The file path containing synonym data.
+
+    Returns:
+        dict: A dictionary mapping commands to their synonyms.
+    """
+    synonyms = {}  # Dictionary to store command synonyms
+
+    # Read and process the synonym file
     with open(filename) as f:
         while True:
+            line = f.readline().strip()
 
-            # Read every line until an enter is found
-            line = f.readline()
-            if line == "\n":
+            # Stop at the end of the file
+            if not line:
                 break
 
-            # Put every information of a room and store it as an object
-            # Put this information in a dicitonairy
-            room_info = line.strip().split("\t")
-            id = room_info[0]
-            name = room_info[1]
-            description = room_info[2]
-            rooms[id] = Room(id, name, description)
+            # Split each line by '=' to extract command and synonym
+            command, synonym = line.split("=")
+            synonyms[command] = synonym
 
-        # Now read the second part of the information until the second enter
-        line = f.readline()
-        while line != "\n":
-
-            # Put every information about the room connections in some variables
-            connections = line.rstrip().split("\t")
-            id = connections[0]
-            source_room = rooms[id]
-
-            # Add connections based on the vairables
-            for i in range(1,len(connections),2):
-
-                #add connections without items
-                if "/" in connections[i+1]:
-                    direction = connections[i]
-                    destination_room, item = connections[i+1].split("/")
-                    source_room.add_connection(direction, rooms[destination_room], item)
-
-                # Add connections with items
-                else:
-                    direction = connections[i]
-                    destination_room = rooms[connections[i+1]]
-                    item = None
-                    source_room.add_connection(direction, destination_room, item)
-            line = f.readline()
-
-        # Read the third part of the file until the ends
-        line = f.readline()
-        while line != "":
-
-            # Add every item to an room object in a dictionairy called inventory
-            item = line.strip().split("\t")
-            name = item[0]
-            description = item[1]
-            room = item[2]
-            item = Item(name, description)
-            rooms[room].add_inventory(name, item)
-            line = f.readline()
-
-        return rooms['1']
-def loader_synonyms(filename):
-    """
-    Load synonyms for command input.
-    """
-
-    # Make a dictionairy with synonyms
-    synonyms = {}
-
-    # Read the third part of file textfile
-    with open(filename) as f:
-        line = f.readline()
-
-        # Stop at the end of the file
-        while line != "":
-
-            # Put every synonym of a word in a dictionry
-            # Return the whole dictionairy
-            synonym_info = line.strip().split("=")
-            letter = synonym_info[0]
-            word = synonym_info[1]
-            synonyms[letter] = synonym_info[1]
-            line = f.readline()
     return synonyms

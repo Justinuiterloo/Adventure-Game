@@ -7,7 +7,7 @@ class Item:
         self._item_description = description
 
 
-    def item_desciption(self):
+    def item_description(self):
         """
         Return the descriptions of items based on the namen en descption attributes
         """
